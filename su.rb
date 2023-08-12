@@ -54,7 +54,6 @@ end
 Step = Struct.new(:row, :col, :num)
 # Return an array of Steps (can be empty)
 def possible_steps(s)
-  # TODO: optimization: return early if found only one possible number for cell
   s.rows.map.with_index do |row, r|
     row.map.with_index do |num, c|
       next unless num == 0
@@ -98,6 +97,8 @@ def solve(s)
 end
 
 class TestSudoku < Minitest::Test
+  make_my_diffs_pretty!
+
   def _test_solver(data)
     data.each { |hash|
       s = init_sudoku(hash[:puzzle])
