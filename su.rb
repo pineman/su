@@ -39,7 +39,7 @@ class Sudoku
   Step = Struct.new(:row, :col, :num)
   # Return either
   # * a Step if there exists a cell with only one possible number
-  # * a matrix of possible numbers for each cell
+  # * an array of Steps otherwise (can be empty)
   private def possible_steps
     @rows.map.with_index do |row, r|
       row.map.with_index do |num, c|
@@ -48,10 +48,11 @@ class Sudoku
         in_col = nums(@cols[c])
         in_box = nums(@boxes[rc2box(r, c)[0]])
         nums = (1..9).to_a - in_row - in_col - in_box
-        return Step.new(r, c, nums.first) if nums.size == 1
-        nums
+        ret = nums.map { Step.new(r, c, _1) }
+        return ret.first if nums.size == 1
+        ret
       end
-    end
+    end.flatten
   end
 
   private def update_grid(s)
@@ -135,30 +136,30 @@ class TestSudoku < Minitest::Test
           [3, 4, 5, 2, 8, 6, 1, 7, 9],
         ]
       },
-      #{
-      #  puzzle: [
-      #    [0, 0, 0, 0, 0, 0, 0, 0, 0],
-      #    [0, 0, 0, 0, 0, 3, 0, 8, 5],
-      #    [0, 0, 1, 0, 2, 0, 0, 0, 0],
-      #    [0, 0, 0, 5, 0, 7, 0, 0, 0],
-      #    [0, 0, 4, 0, 0, 0, 1, 0, 0],
-      #    [0, 9, 0, 0, 0, 0, 0, 0, 0],
-      #    [5, 0, 0, 0, 0, 0, 0, 7, 3],
-      #    [0, 0, 2, 0, 1, 0, 0, 0, 0],
-      #    [0, 0, 0, 0, 4, 0, 0, 0, 9],
-      #  ],
-      #  solution: [
-      #    [9, 8, 7, 6, 5, 4, 3, 2, 1],
-      #    [2, 4, 6, 1, 7, 3, 9, 8, 5],
-      #    [3, 5, 1, 9, 2, 8, 7, 4, 6],
-      #    [1, 2, 8, 5, 3, 7, 6, 9, 4],
-      #    [6, 3, 4, 8, 9, 2, 1, 5, 7],
-      #    [7, 9, 5, 4, 6, 1, 8, 3, 2],
-      #    [5, 1, 9, 2, 8, 6, 4, 7, 3],
-      #    [4, 6, 2, 3, 1, 9, 5, 6, 8],
-      #    [8, 6, 3, 7, 4, 5, 2, 1, 9],
-      #  ]
-      #}
+      {
+        puzzle: [
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 3, 0, 8, 5],
+          [0, 0, 1, 0, 2, 0, 0, 0, 0],
+          [0, 0, 0, 5, 0, 7, 0, 0, 0],
+          [0, 0, 4, 0, 0, 0, 1, 0, 0],
+          [0, 9, 0, 0, 0, 0, 0, 0, 0],
+          [5, 0, 0, 0, 0, 0, 0, 7, 3],
+          [0, 0, 2, 0, 1, 0, 0, 0, 0],
+          [0, 0, 0, 0, 4, 0, 0, 0, 9],
+        ],
+        solution: [
+          [9, 8, 7, 6, 5, 4, 3, 2, 1],
+          [2, 4, 6, 1, 7, 3, 9, 8, 5],
+          [3, 5, 1, 9, 2, 8, 7, 4, 6],
+          [1, 2, 8, 5, 3, 7, 6, 9, 4],
+          [6, 3, 4, 8, 9, 2, 1, 5, 7],
+          [7, 9, 5, 4, 6, 1, 8, 3, 2],
+          [5, 1, 9, 2, 8, 6, 4, 7, 3],
+          [4, 6, 2, 3, 1, 9, 5, 6, 8],
+          [8, 6, 3, 7, 4, 5, 2, 1, 9],
+        ]
+      }
     ]
   end
 
