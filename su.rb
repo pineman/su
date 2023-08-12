@@ -100,7 +100,7 @@ def best_moves(moves)
   min, min_r, min_c = 10, nil, nil
   moves.each.with_index { |row, r|
     row.each.with_index { |nums, c|
-      next if nums.nil? || nums.empty?
+      next unless nums
       if nums.size < min
         min, min_r, min_c = nums.size, r, c
       end
