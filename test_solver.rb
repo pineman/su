@@ -7,22 +7,63 @@ class TestSudoku < Minitest::Test
   def _test_solver(data)
     data.each { |hash|
       s = init_sudoku(hash[:puzzle])
-      actual = solve(s)
+      actual = solve_first(s)
       expected = hash[:solution]
       assert_equal expected, actual
     }
   end
 
   def test_solver_trivial
-    _test_solver(@direct)
+    _test_solver(@trivial)
   end
 
   def test_solver_backtracking
     _test_solver(@backtracking)
   end
 
+  def test_solve_all
+    @number.each { |hash|
+      s = init_sudoku(hash[:puzzle])
+      assert_equal hash[:solutions], solve_all(s).size
+    }
+    (@backtracking + @trivial).each { |hash|
+      s = init_sudoku(hash[:puzzle])
+      assert_equal 1, solve_all(s).size
+    }
+  end
+
   def setup
-    @direct = [
+    @number = [
+      {
+        puzzle: [
+          [5, 3, 6, 0, 0, 0, 0, 0, 0],
+          [0, 4, 7, 0, 8, 0, 5, 0, 0],
+          [0, 8, 1, 2, 0, 7, 4, 6, 3],
+          [0, 0, 0, 8, 0, 3, 9, 5, 0],
+          [0, 0, 0, 7, 0, 0, 0, 0, 4],
+          [0, 0, 0, 1, 0, 0, 0, 0, 2],
+          [4, 6, 0, 5, 7, 0, 8, 0, 9],
+          [7, 0, 5, 0, 0, 0, 0, 4, 6],
+          [0, 0, 2, 6, 3, 0, 0, 0, 5]
+        ],
+        solutions: 1
+      },
+      {
+        puzzle: [
+          [5, 3, 6, 0, 0, 0, 0, 0, 0],
+          [0, 4, 7, 0, 0, 0, 5, 0, 0],
+          [0, 8, 1, 2, 0, 7, 4, 6, 3],
+          [0, 0, 0, 8, 0, 3, 9, 5, 0],
+          [0, 0, 0, 7, 0, 0, 0, 0, 4],
+          [0, 0, 0, 1, 0, 0, 0, 0, 2],
+          [4, 6, 0, 5, 7, 0, 8, 0, 9],
+          [7, 0, 5, 0, 0, 0, 0, 4, 6],
+          [0, 0, 2, 6, 3, 0, 0, 0, 5]
+        ],
+        solutions: 4
+      }
+    ]
+    @trivial = [
       {
         puzzle: [
           [0, 0, 0, 2, 6, 0, 7, 0, 1],
@@ -148,3 +189,4 @@ class TestSudoku < Minitest::Test
     ]
   end
 end
+

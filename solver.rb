@@ -61,7 +61,6 @@ def possible_steps(grid)
 end
 
 def move(sudoku, row, col, num)
-  $moves += 1
   new = Marshal.load(Marshal.dump(sudoku))
   box, i = rc2box(row, col)
 
@@ -108,24 +107,27 @@ def no_moves?(s)
 end
 
 # Return rows matrix if solved, false otherwise
-def _solve(s)
+def solve_first(s)
   return s.grid.rows if done?(s)
   return false if no_moves?(s)
   row, col = best_moves(s.moves)
   s.moves[row][col].each do |num|
     new = move(s, row, col, num)
-    solved = _solve(new)
+    solved = solve_first(new)
     return solved if solved
   end
   false
 end
 
-def solve(s)
-  r = nil
-  $moves = 0
-  b = Benchmark.measure {
-    r = _solve(s)
-  }
-  puts "took #{(b.real*1000).round(2)}ms & #{$moves} moves"
-  r
+def solve_all(s)
+  return [s.grid.rows] if done?(s)
+  return [] if no_moves?(s)
+  sols = []
+  row, col = best_moves(s.moves)
+  s.moves[row][col].each do |num|
+    new = move(s, row, col, num)
+    sols += solve_all(new)
+  end
+  sols
 end
+
