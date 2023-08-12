@@ -68,21 +68,22 @@ def possible_steps(s)
   end.flatten.compact
 end
 
-def steps_for_best_cell(ps)
+def most_constrained(ps)
   ps.group_by { [_1.row, _1.col] }
     .sort_by { |rc, steps| steps.size }
     .first => [[r, c], steps]
   steps
 end
 
+# Return rows matrix if solved, false otherwise
 def _solve(s)
   return s.rows if done?(s)
   ps = possible_steps(s)
   return false if ps.empty?
-  steps_for_best_cell(ps).each do |step|
-    try_s = apply_step(s, step)
-    found = _solve(try_s)
-    return found if found
+  most_constrained(ps).each do |step|
+    try = apply_step(s, step)
+    solved = _solve(try)
+    return solved if solved
   end
   false
 end
@@ -97,8 +98,8 @@ def solve(s)
 end
 
 class TestSudoku < Minitest::Test
-  def test_solver
-    @test_data.each { |hash|
+  def _test_solver(data)
+    data.each { |hash|
       s = init_sudoku(hash[:puzzle])
       actual = solve(s)
       expected = hash[:solution]
@@ -106,8 +107,16 @@ class TestSudoku < Minitest::Test
     }
   end
 
+  def test_solver_backtracking
+    _test_solver(@backtracking)
+  end
+
+  def test_solver_trivial
+    _test_solver(@direct)
+  end
+
   def setup
-    @test_data = [
+    @direct = [
       {
         puzzle: [
           [0, 0, 0, 2, 6, 0, 7, 0, 1],
@@ -155,7 +164,9 @@ class TestSudoku < Minitest::Test
           [2, 8, 7, 4, 1, 9, 6, 3, 5],
           [3, 4, 5, 2, 8, 6, 1, 7, 9],
         ]
-      },
+      }
+    ]
+    @backtracking = [
       {
         puzzle: [
           [0, 0, 0, 0, 0, 0, 0, 0, 0],
