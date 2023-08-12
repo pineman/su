@@ -75,19 +75,20 @@ end
 
 def _solve(s, level=0)
   puts "#{' '*level}_solve"
-  return s.rows if done?(s)
+  return true if done?(s)
   ps = possible_steps(s)
-  return nil if ps.empty?
+  return false if ps.empty?
   steps = steps_for_best_cell(ps)
   puts "#{' '*level}got steps = #{steps}"
   steps.each do |step|
     puts "#{' '*level}trying step #{step}"
     try_s = new_state(s, step)
     ret = _solve(try_s, level+1)
-    puts "#{' '*level}_solve returned #{ret} #{ret.nil?}"
-    return ret if ret
+    puts "#{' '*level}_solve returned #{ret}"
+    return true if ret
     puts "#{' '*level}step #{step} failed"
   end
+  false
 end
 
 def solve(s)
