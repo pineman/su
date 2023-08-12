@@ -72,6 +72,7 @@ def possible_steps(grid)
 end
 
 def move(sudoku, row, col, num)
+  $moves += 1
   new = Marshal.load(Marshal.dump(sudoku))
   box, i = rc2box(row, col)
 
@@ -132,10 +133,11 @@ end
 
 def solve(s)
   r = nil
+  $moves = 0
   b = Benchmark.measure {
     r = _solve(s)
   }
-  puts "took #{(b.real*1000).round(2)}ms"
+  puts "took #{(b.real*1000).round(2)}ms & #{$moves} moves"
   r
 end
 
