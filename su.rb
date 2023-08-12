@@ -65,15 +65,15 @@ end
 
 def most_constrained_cell(ps)
   min, min_r, min_c = 10, nil, nil
-  ps.map.with_index do |row, r|
-    row.map.with_index do |nums, c|
+  ps.each.with_index do |row, r|
+    row.each.with_index do |nums, c|
       next unless nums
       if nums.size < min
         min, min_r, min_c = nums.size, r, c
       end
     end
   end
-  [min_r, min_c, ps[min_r][min_c]]
+  [min_r, min_c]
 end
 
 # Return rows matrix if solved, false otherwise
@@ -81,8 +81,8 @@ def _solve(s)
   return s.rows if done?(s)
   ps = possible_steps(s)
   return false if ps.empty?
-  row, col, possible = most_constrained_cell(ps)
-  possible.each do |num|
+  row, col = most_constrained_cell(ps)
+  ps[row][col].each do |num|
     try = apply_step(s, row, col, num)
     solved = _solve(try)
     return solved if solved
@@ -194,8 +194,31 @@ class TestSudoku < Minitest::Test
           [4, 7, 2, 3, 1, 9, 5, 6, 8],
           [8, 6, 3, 7, 4, 5, 2, 1, 9],
         ]
+      },
+      {
+        puzzle: [
+          [0, 0, 5, 3, 0, 0, 0, 0, 0],
+          [8, 0, 0, 0, 0, 0, 0, 2, 0],
+          [0, 7, 0, 0, 1, 0, 5, 0, 0],
+          [4, 0, 0, 0, 0, 5, 3, 0, 0],
+          [0, 1, 0, 0, 7, 0, 0, 0, 6],
+          [0, 0, 3, 2, 0, 0, 0, 8, 0],
+          [0, 6, 0, 5, 0, 0, 0, 0, 9],
+          [0, 0, 4, 0, 0, 0, 0, 3, 0],
+          [0, 0, 0, 0, 0, 9, 7, 0, 0],
+        ],
+        solution: [
+          [1, 4, 5, 3, 2, 7, 6, 9, 8],
+          [8, 3, 9, 6, 5, 4, 1, 2, 7],
+          [6, 7, 2, 9, 1, 8, 5, 4, 3],
+          [4, 9, 6, 1, 8, 5, 3, 7, 2],
+          [2, 1, 8, 4, 7, 3, 9, 5, 6],
+          [7, 5, 3, 2, 9, 6, 4, 8, 1],
+          [3, 6, 7, 5, 4, 2, 8, 1, 9],
+          [9, 8, 4, 7, 6, 1, 2, 3, 5],
+          [5, 2, 1, 8, 3, 9, 7, 6, 4],
+        ]
       }
     ]
   end
 end
-
