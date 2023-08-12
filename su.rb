@@ -39,7 +39,7 @@ class Sudoku
   Step = Struct.new(:row, :col, :num)
   # Return either
   # * a Step if there exists a cell with only one possible number
-  # * an array of Steps otherwise (can be empty)
+  # * otherwise an array of Steps (can be empty)
   private def possible_steps
     @rows.map.with_index do |row, r|
       row.map.with_index do |num, c|
@@ -49,10 +49,10 @@ class Sudoku
         in_box = nums(@boxes[rc2box(r, c)[0]])
         nums = (1..9).to_a - in_row - in_col - in_box
         ret = nums.map { Step.new(r, c, _1) }
-        return ret.first if nums.size == 1
+        return ret if nums.size == 1
         ret
       end
-    end.flatten
+    end.flatten.compact
   end
 
   private def update_grid(s)
@@ -62,15 +62,33 @@ class Sudoku
     @boxes[box][boxi] = s.num
   end
 
-  private def not_done?
-    @rows.any? { |row| row.any? { _1 == 0 } }
+  private def done?
+    @rows.all? { |row| row.all? { _1 != 0 } }
   end
 
   private def _solve
-    while not_done?
-      ps = possible_steps
-      exit(1) if ps.is_a?(Array)
-      update_grid(ps)
+    return @rows if done?
+    ps = possible_steps
+    if ps.empty?
+      puts "no possible steps!"
+      pp @rows
+      return
+    end
+    if ps.size == 1
+      update_grid(ps.first)
+      _solve
+    else
+      ps.group_by { [_1.row, _1.col] }
+        .sort_by { |k, v| v.size }
+        .first => [[r, c], steps]
+      puts "can choose between #{steps.size} steps for [#{r}, #{c}]"
+      steps.each { |step|
+        backup = [@rows, @cols, @boxes]
+        update_grid(step)
+        if _solve == nil
+          @rows, @cols, @boxes = backup
+        end
+      }
     end
   end
 
