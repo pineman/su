@@ -38,12 +38,12 @@ def nums(array)
   array.filter { _1 != 0 }
 end
 
-def apply_step(s, step)
+def apply_step(s, r, c, num)
   new = Marshal.load(Marshal.dump(s))
-  new.rows[step.row][step.col] = step.num
-  new.cols[step.col][step.row] = step.num
-  box, boxi = rc2box(step.row, step.col)
-  new.boxes[box][boxi] = step.num
+  new.rows[r][c] = num
+  new.cols[c][r] = num
+  box, boxi = rc2box(r, c)
+  new.boxes[box][boxi] = num
   new
 end
 
@@ -51,8 +51,6 @@ def done?(s)
   s.rows.all? { |row| row.all? { _1 != 0 } }
 end
 
-Step = Struct.new(:row, :col, :num)
-# Return an array of Steps (can be empty)
 def possible_steps(s)
   s.rows.map.with_index do |row, r|
     row.map.with_index do |num, c|
@@ -60,18 +58,22 @@ def possible_steps(s)
       in_row = nums(s.rows[r])
       in_col = nums(s.cols[c])
       in_box = nums(s.boxes[rc2box(r, c)[0]])
-      nums = (1..9).to_a - in_row - in_col - in_box
-      return [Step.new(r, c, nums.first)] if nums.size == 1
-      nums.map { Step.new(r, c, _1) }
+      (1..9).to_a - in_row - in_col - in_box
     end
-  end.flatten.compact
+  end
 end
 
-def most_constrained(ps)
-  ps.group_by { [_1.row, _1.col] }
-    .sort_by { |rc, steps| steps.size }
-    .first => [[r, c], steps]
-  steps
+def most_constrained_cell(ps)
+  min, min_r, min_c = 10, nil, nil
+  ps.map.with_index do |row, r|
+    row.map.with_index do |nums, c|
+      next unless nums
+      if nums.size < min
+        min, min_r, min_c = nums.size, r, c
+      end
+    end
+  end
+  [min_r, min_c, ps[min_r][min_c]]
 end
 
 # Return rows matrix if solved, false otherwise
@@ -79,8 +81,9 @@ def _solve(s)
   return s.rows if done?(s)
   ps = possible_steps(s)
   return false if ps.empty?
-  most_constrained(ps).each do |step|
-    try = apply_step(s, step)
+  row, col, possible = most_constrained_cell(ps)
+  possible.each do |num|
+    try = apply_step(s, row, col, num)
     solved = _solve(try)
     return solved if solved
   end
