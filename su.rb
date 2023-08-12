@@ -1,4 +1,5 @@
 require 'benchmark'
+require 'minitest/autorun'
 
 Sudoku = Struct.new(:rows, :cols, :boxes)
 def init_sudoku(rows)
@@ -22,7 +23,7 @@ def validate_puzzle(s)
   if (d = s.cols.find_index { |c| c = c.filter { _1 != 0 }; c.uniq.size != c.size })
     raise "duplicate in column #{d+1}"
   end
-  if (d = s.boxes.find_index { |b| b = b.filter! { _1 != 0 }; b.uniq.size != b.size })
+  if (d = s.boxes.find_index { |b| b = b.filter { _1 != 0 }; b.uniq.size != b.size })
     raise "duplicate in box #{d+1}"
   end
 end
@@ -37,8 +38,8 @@ def nums(array)
   array.filter { _1 != 0 }
 end
 
-def new_state(s, step)
-  new = s.dup
+def apply_step(s, step)
+  new = Marshal.load(Marshal.dump(s))
   new.rows[step.row][step.col] = step.num
   new.cols[step.col][step.row] = step.num
   box, boxi = rc2box(step.row, step.col)
@@ -61,6 +62,7 @@ def possible_steps(s)
       in_col = nums(s.cols[c])
       in_box = nums(s.boxes[rc2box(r, c)[0]])
       nums = (1..9).to_a - in_row - in_col - in_box
+      return [Step.new(r, c, nums.first)] if nums.size == 1
       nums.map { Step.new(r, c, _1) }
     end
   end.flatten.compact
@@ -73,20 +75,14 @@ def steps_for_best_cell(ps)
   steps
 end
 
-def _solve(s, level=0)
-  puts "#{' '*level}_solve"
-  return true if done?(s)
+def _solve(s)
+  return s.rows if done?(s)
   ps = possible_steps(s)
   return false if ps.empty?
-  steps = steps_for_best_cell(ps)
-  puts "#{' '*level}got steps = #{steps}"
-  steps.each do |step|
-    puts "#{' '*level}trying step #{step}"
-    try_s = new_state(s, step)
-    ret = _solve(try_s, level+1)
-    puts "#{' '*level}_solve returned #{ret}"
-    return true if ret
-    puts "#{' '*level}step #{step} failed"
+  steps_for_best_cell(ps).each do |step|
+    try_s = apply_step(s, step)
+    found = _solve(try_s)
+    return found if found
   end
   false
 end
@@ -100,66 +96,66 @@ def solve(s)
   r
 end
 
-require 'minitest/autorun'
-
 class TestSudoku < Minitest::Test
   def test_solver
     @test_data.each { |hash|
       s = init_sudoku(hash[:puzzle])
-      assert_equal hash[:solution], solve(s)
+      actual = solve(s)
+      expected = hash[:solution]
+      assert_equal expected, actual
     }
   end
 
   def setup
     @test_data = [
-      #{
-      #  puzzle: [
-      #    [0, 0, 0, 2, 6, 0, 7, 0, 1],
-      #    [6, 8, 0, 0, 7, 0, 0, 9, 0],
-      #    [1, 9, 0, 0, 0, 4, 5, 0, 0],
-      #    [8, 2, 0, 1, 0, 0, 0, 4, 0],
-      #    [0, 0, 4, 6, 0, 2, 9, 0, 0],
-      #    [0, 5, 0, 0, 0, 3, 0, 2, 8],
-      #    [0, 0, 9, 3, 0, 0, 0, 7, 4],
-      #    [0, 4, 0, 0, 5, 0, 0, 3, 6],
-      #    [7, 0, 3, 0, 1, 8, 0, 0, 0],
-      #  ],
-      #  solution: [
-      #    [4, 3, 5, 2, 6, 9, 7, 8, 1],
-      #    [6, 8, 2, 5, 7, 1, 4, 9, 3],
-      #    [1, 9, 7, 8, 3, 4, 5, 6, 2],
-      #    [8, 2, 6, 1, 9, 5, 3, 4, 7],
-      #    [3, 7, 4, 6, 8, 2, 9, 1, 5],
-      #    [9, 5, 1, 7, 4, 3, 6, 2, 8],
-      #    [5, 1, 9, 3, 2, 6, 8, 7, 4],
-      #    [2, 4, 8, 9, 5, 7, 1, 3, 6],
-      #    [7, 6, 3, 4, 1, 8, 2, 5, 9],
-      #  ]
-      #},
-      #{
-      #  puzzle: [
-      #    [5, 3, 0, 0, 7, 0, 0, 0, 0],
-      #    [6, 0, 0, 1, 9, 5, 0, 0, 0],
-      #    [0, 9, 8, 0, 0, 0, 0, 6, 0],
-      #    [8, 0, 0, 0, 6, 0, 0, 0, 3],
-      #    [4, 0, 0, 8, 0, 3, 0, 0, 1],
-      #    [7, 0, 0, 0, 2, 0, 0, 0, 6],
-      #    [0, 6, 0, 0, 0, 0, 2, 8, 0],
-      #    [0, 0, 0, 4, 1, 9, 0, 0, 5],
-      #    [0, 0, 0, 0, 8, 0, 0, 7, 9],
-      #  ],
-      #  solution: [
-      #    [5, 3, 4, 6, 7, 8, 9, 1, 2],
-      #    [6, 7, 2, 1, 9, 5, 3, 4, 8],
-      #    [1, 9, 8, 3, 4, 2, 5, 6, 7],
-      #    [8, 5, 9, 7, 6, 1, 4, 2, 3],
-      #    [4, 2, 6, 8, 5, 3, 7, 9, 1],
-      #    [7, 1, 3, 9, 2, 4, 8, 5, 6],
-      #    [9, 6, 1, 5, 3, 7, 2, 8, 4],
-      #    [2, 8, 7, 4, 1, 9, 6, 3, 5],
-      #    [3, 4, 5, 2, 8, 6, 1, 7, 9],
-      #  ]
-      #},
+      {
+        puzzle: [
+          [0, 0, 0, 2, 6, 0, 7, 0, 1],
+          [6, 8, 0, 0, 7, 0, 0, 9, 0],
+          [1, 9, 0, 0, 0, 4, 5, 0, 0],
+          [8, 2, 0, 1, 0, 0, 0, 4, 0],
+          [0, 0, 4, 6, 0, 2, 9, 0, 0],
+          [0, 5, 0, 0, 0, 3, 0, 2, 8],
+          [0, 0, 9, 3, 0, 0, 0, 7, 4],
+          [0, 4, 0, 0, 5, 0, 0, 3, 6],
+          [7, 0, 3, 0, 1, 8, 0, 0, 0],
+        ],
+        solution: [
+          [4, 3, 5, 2, 6, 9, 7, 8, 1],
+          [6, 8, 2, 5, 7, 1, 4, 9, 3],
+          [1, 9, 7, 8, 3, 4, 5, 6, 2],
+          [8, 2, 6, 1, 9, 5, 3, 4, 7],
+          [3, 7, 4, 6, 8, 2, 9, 1, 5],
+          [9, 5, 1, 7, 4, 3, 6, 2, 8],
+          [5, 1, 9, 3, 2, 6, 8, 7, 4],
+          [2, 4, 8, 9, 5, 7, 1, 3, 6],
+          [7, 6, 3, 4, 1, 8, 2, 5, 9],
+        ]
+      },
+      {
+        puzzle: [
+          [5, 3, 0, 0, 7, 0, 0, 0, 0],
+          [6, 0, 0, 1, 9, 5, 0, 0, 0],
+          [0, 9, 8, 0, 0, 0, 0, 6, 0],
+          [8, 0, 0, 0, 6, 0, 0, 0, 3],
+          [4, 0, 0, 8, 0, 3, 0, 0, 1],
+          [7, 0, 0, 0, 2, 0, 0, 0, 6],
+          [0, 6, 0, 0, 0, 0, 2, 8, 0],
+          [0, 0, 0, 4, 1, 9, 0, 0, 5],
+          [0, 0, 0, 0, 8, 0, 0, 7, 9],
+        ],
+        solution: [
+          [5, 3, 4, 6, 7, 8, 9, 1, 2],
+          [6, 7, 2, 1, 9, 5, 3, 4, 8],
+          [1, 9, 8, 3, 4, 2, 5, 6, 7],
+          [8, 5, 9, 7, 6, 1, 4, 2, 3],
+          [4, 2, 6, 8, 5, 3, 7, 9, 1],
+          [7, 1, 3, 9, 2, 4, 8, 5, 6],
+          [9, 6, 1, 5, 3, 7, 2, 8, 4],
+          [2, 8, 7, 4, 1, 9, 6, 3, 5],
+          [3, 4, 5, 2, 8, 6, 1, 7, 9],
+        ]
+      },
       {
         puzzle: [
           [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -180,7 +176,7 @@ class TestSudoku < Minitest::Test
           [6, 3, 4, 8, 9, 2, 1, 5, 7],
           [7, 9, 5, 4, 6, 1, 8, 3, 2],
           [5, 1, 9, 2, 8, 6, 4, 7, 3],
-          [4, 6, 2, 3, 1, 9, 5, 6, 8],
+          [4, 7, 2, 3, 1, 9, 5, 6, 8],
           [8, 6, 3, 7, 4, 5, 2, 1, 9],
         ]
       }
