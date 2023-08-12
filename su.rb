@@ -1,31 +1,12 @@
 require 'benchmark'
 require 'minitest/autorun'
 
-Sudoku = Struct.new(:rows, :cols, :boxes)
+Grid = Struct.new(:rows, :cols, :boxes)
+Sudoku = Struct.new(:grid, :moves)
 def init_sudoku(rows)
-  cols = (0...9).map { |c| rows.map { _1[c] } }
-  boxes = Array.new(9) { Array.new(9) }
-  rows.each.with_index { |row, r|
-    row.each.with_index { |num, c|
-      box, boxi = rc2box(r, c)
-      boxes[box][boxi] = num;
-    }
-  }
-  s = Sudoku.new(rows, cols, boxes)
-  validate_puzzle(s)
-  s
-end
-
-def validate_puzzle(s)
-  if (d = s.rows.find_index { |r| r = r.filter { _1 != 0 }; r.uniq.size != r.size })
-    raise "duplicate in row #{d+1}"
-  end
-  if (d = s.cols.find_index { |c| c = c.filter { _1 != 0 }; c.uniq.size != c.size })
-    raise "duplicate in column #{d+1}"
-  end
-  if (d = s.boxes.find_index { |b| b = b.filter { _1 != 0 }; b.uniq.size != b.size })
-    raise "duplicate in box #{d+1}"
-  end
+  grid = matrix_to_grid(rows)
+  validate_puzzle(grid)
+  Sudoku.new(grid, possible_steps(grid))
 end
 
 def rc2box(r, c)
@@ -34,57 +15,116 @@ def rc2box(r, c)
   [box, boxi]
 end
 
-def nums(array)
-  array.filter { _1 != 0 }
+def rc4box(box)
+  # Calculate the row and column of the top-left corner of the box
+  start_row = (box / 3) * 3
+  start_col = (box % 3) * 3
+
+  # Create an array of 9 [r, c] coordinates for the cells in the box
+  coordinates = []
+
+  3.times do |i|
+    3.times do |j|
+      coordinates << [start_row + i, start_col + j]
+    end
+  end
+
+  coordinates
 end
 
-def apply_step(s, r, c, num)
-  new = Marshal.load(Marshal.dump(s))
-  new.rows[r][c] = num
-  new.cols[c][r] = num
-  box, boxi = rc2box(r, c)
-  new.boxes[box][boxi] = num
+def matrix_to_grid(m)
+  cols = (0...9).map { |c| m.map { |row| row[c] } }
+  boxes = Array.new(9) { Array.new(9) }
+  m.each.with_index { |row, r|
+    row.each.with_index { |content, c|
+      box, i = rc2box(r, c)
+      boxes[box][i] = content;
+    }
+  }
+  Grid.new(m, cols, boxes)
+end
+
+def validate_puzzle(grid)
+  if (d = grid.rows.find_index { |r| r = r.filter { _1 != 0 }; r.uniq.size != r.size })
+    raise "duplicate in row #{d+1}"
+  end
+  if (d = grid.cols.find_index { |c| c = c.filter { _1 != 0 }; c.uniq.size != c.size })
+    raise "duplicate in column #{d+1}"
+  end
+  if (d = grid.boxes.find_index { |b| b = b.filter { _1 != 0 }; b.uniq.size != b.size })
+    raise "duplicate in box #{d+1}"
+  end
+end
+
+def possible_steps(grid)
+  def nums(array)
+    array.filter { _1 != 0 }
+  end
+  grid.rows.map.with_index { |row, r|
+    row.map.with_index { |num, c|
+      next unless num == 0
+      in_row = nums(grid.rows[r])
+      in_col = nums(grid.cols[c])
+      in_box = nums(grid.boxes[rc2box(r, c).first])
+      (1..9).to_a - in_row - in_col - in_box
+    }
+  }
+end
+
+def move(sudoku, row, col, num)
+  new = Marshal.load(Marshal.dump(sudoku))
+  box, i = rc2box(row, col)
+
+  new.grid.rows[row][col] = num
+  new.grid.cols[col][row] = num
+  new.grid.boxes[box][i] = num
+
+  new.moves[row][col] = nil
+  new.moves[row].each.with_index { |_, i|
+    next if new.moves[row][i].nil? || new.moves[row][i].empty?
+    new.moves[row][i] -= [num]
+  }
+  new.moves.each.with_index { |_, i|
+    next if new.moves[i][col].nil? || new.moves[i][col].empty?
+    new.moves[i][col] -= [num]
+  }
+  rc4box(rc2box(row, col).first).each { |r, c|
+    next if new.moves[r][c].nil? || new.moves[r][c].empty?
+    new.moves[r][c] -= [num]
+  }
+
   new
 end
 
-def done?(s)
-  s.rows.all? { |row| row.all? { _1 != 0 } }
-end
-
-def possible_steps(s)
-  s.rows.map.with_index do |row, r|
-    row.map.with_index do |num, c|
-      next unless num == 0
-      in_row = nums(s.rows[r])
-      in_col = nums(s.cols[c])
-      in_box = nums(s.boxes[rc2box(r, c)[0]])
-      (1..9).to_a - in_row - in_col - in_box
-    end
-  end
-end
-
-def most_constrained_cell(ps)
+def best_moves(moves)
   min, min_r, min_c = 10, nil, nil
-  ps.each.with_index do |row, r|
-    row.each.with_index do |nums, c|
-      next unless nums
+  moves.each.with_index { |row, r|
+    row.each.with_index { |nums, c|
+      next if nums.nil? || nums.empty?
       if nums.size < min
         min, min_r, min_c = nums.size, r, c
       end
-    end
-  end
+    }
+  }
   [min_r, min_c]
+end
+
+def done?(s)
+  s.grid.rows.all? { |row| row.all? { |num| num != 0 } }
+end
+
+def no_moves?(s)
+  s.moves.flatten.compact.empty?
 end
 
 # Return rows matrix if solved, false otherwise
 def _solve(s)
-  return s.rows if done?(s)
-  ps = possible_steps(s)
-  return false if ps.empty?
-  row, col = most_constrained_cell(ps)
-  ps[row][col].each do |num|
-    try = apply_step(s, row, col, num)
-    solved = _solve(try)
+  return s.grid.rows if done?(s)
+  return false if no_moves?(s)
+  row, col = best_moves(s.moves)
+  s.moves[row][col].each do |num|
+    new = move(s, row, col, num)
+    solved = _solve(new)
     return solved if solved
   end
   false
@@ -111,12 +151,12 @@ class TestSudoku < Minitest::Test
     }
   end
 
-  def test_solver_backtracking
-    _test_solver(@backtracking)
-  end
-
   def test_solver_trivial
     _test_solver(@direct)
+  end
+
+  def test_solver_backtracking
+    _test_solver(@backtracking)
   end
 
   def setup
