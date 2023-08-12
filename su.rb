@@ -1,109 +1,113 @@
 require 'benchmark'
 
-class Sudoku
-  def initialize(rows)
-    @rows = rows
-    @cols = (0...9).map { |c| rows.map { _1[c] } }
-    @boxes = Array.new(9) { Array.new(9) }
-    rows.each.with_index { |row, r|
-      row.each.with_index { |num, c|
-        box, boxi = rc2box(r, c)
-        @boxes[box][boxi] = num;
-      }
+Sudoku = Struct.new(:rows, :cols, :boxes)
+def init_sudoku(rows)
+  cols = (0...9).map { |c| rows.map { _1[c] } }
+  boxes = Array.new(9) { Array.new(9) }
+  rows.each.with_index { |row, r|
+    row.each.with_index { |num, c|
+      box, boxi = rc2box(r, c)
+      boxes[box][boxi] = num;
     }
-    validate_puzzle
-  end
+  }
+  s = Sudoku.new(rows, cols, boxes)
+  validate_puzzle(s)
+  s
+end
 
-  private def validate_puzzle
-    if (d = @rows.find_index { |r| r = r.filter { _1 != 0 }; r.uniq.size != r.size })
-      p "duplicate in row #{d+1}"
+def validate_puzzle(s)
+  if (d = s.rows.find_index { |r| r = r.filter { _1 != 0 }; r.uniq.size != r.size })
+    raise "duplicate in row #{d+1}"
+  end
+  if (d = s.cols.find_index { |c| c = c.filter { _1 != 0 }; c.uniq.size != c.size })
+    raise "duplicate in column #{d+1}"
+  end
+  if (d = s.boxes.find_index { |b| b = b.filter! { _1 != 0 }; b.uniq.size != b.size })
+    raise "duplicate in box #{d+1}"
+  end
+end
+
+def rc2box(r, c)
+  box = (r / 3).floor * 3 + (c / 3).floor;
+  boxi = (r % 3) * 3 + (c % 3);
+  [box, boxi]
+end
+
+def nums(array)
+  array.filter { _1 != 0 }
+end
+
+def new_state(s, step)
+  new = s.dup
+  new.rows[step.row][step.col] = step.num
+  new.cols[step.col][step.row] = step.num
+  box, boxi = rc2box(step.row, step.col)
+  new.boxes[box][boxi] = step.num
+  new
+end
+
+def done?(s)
+  s.rows.all? { |row| row.all? { _1 != 0 } }
+end
+
+Step = Struct.new(:row, :col, :num)
+# Return an array of Steps (can be empty)
+def possible_steps(s)
+  s.rows.map.with_index do |row, r|
+    row.map.with_index do |num, c|
+      next unless num == 0
+      in_row = nums(s.rows[r])
+      in_col = nums(s.cols[c])
+      in_box = nums(s.boxes[rc2box(r, c)[0]])
+      nums = (1..9).to_a - in_row - in_col - in_box
+      nums.map { Step.new(r, c, _1) }
     end
-    if (d = @cols.find_index { |c| c = c.filter { _1 != 0 }; c.uniq.size != c.size })
-      p "duplicate in column #{d+1}"
-    end
-    if (d = @boxes.find_index { |b| b = b.filter! { _1 != 0 }; b.uniq.size != b.size })
-      p "duplicate in box #{d+1}"
-    end
-  end
+  end.flatten.compact
+end
 
-  private def rc2box(r, c)
-    box = (r / 3).floor * 3 + (c / 3).floor;
-    boxi = (r % 3) * 3 + (c % 3);
-    [box, boxi]
-  end
+def steps_for_best_cell(ps)
+  ps.group_by { [_1.row, _1.col] }
+    .sort_by { |rc, steps| steps.size }
+    .first => [[r, c], steps]
+  steps
+end
 
-  private def nums(array)
-    array.filter { _1 != 0 }
-  end
-
-  Step = Struct.new(:row, :col, :num)
-  # Return either
-  # * a Step if there exists a cell with only one possible number
-  # * otherwise an array of Steps (can be empty)
-  private def possible_steps
-    @rows.map.with_index do |row, r|
-      row.map.with_index do |num, c|
-        next unless num == 0
-        in_row = nums(@rows[r])
-        in_col = nums(@cols[c])
-        in_box = nums(@boxes[rc2box(r, c)[0]])
-        nums = (1..9).to_a - in_row - in_col - in_box
-        ret = nums.map { Step.new(r, c, _1) }
-        return ret if nums.size == 1
-        ret
-      end
-    end.flatten.compact
-  end
-
-  private def update_grid(s)
-    @rows[s.row][s.col] = s.num
-    @cols[s.col][s.row] = s.num
-    box, boxi = rc2box(s.row, s.col)
-    @boxes[box][boxi] = s.num
-  end
-
-  private def done?
-    @rows.all? { |row| row.all? { _1 != 0 } }
-  end
-
-  private def _solve
-    return @rows if done?
-    ps = possible_steps
-    if ps.empty?
-      puts "no possible steps!"
-      pp @rows
-      return
-    end
-    if ps.size == 1
-      update_grid(ps.first)
-      _solve
+def _solve(s)
+  while !done?(s)
+    ps = possible_steps(s)
+    steps = steps_for_best_cell(ps)
+    if steps.size == 1
+      s = new_state(s, steps.first)
+    elsif steps.size == 0
+      # backtrack!
+      raise NotImplementedError
     else
-      ps.group_by { [_1.row, _1.col] }
-        .sort_by { |k, v| v.size }
-        .first => [[r, c], steps]
-      puts "can choose between #{steps.size} steps for [#{r}, #{c}]"
-      steps.each { |step|
-        backup = [@rows, @cols, @boxes]
-        update_grid(step)
-        if _solve == nil
-          @rows, @cols, @boxes = backup
-        end
-      }
+      # bifurcation. save state
+      raise NotImplementedError
     end
   end
+  s.rows
+end
 
-  def solve
-    b = Benchmark.measure {
-      _solve
-    }
-    puts "took #{(b.real*1000).round(2)}ms"
-    @rows
-  end
+def solve(s)
+  r = nil
+  b = Benchmark.measure {
+    r = _solve(s)
+  }
+  puts "took #{(b.real*1000).round(2)}ms"
+  r
 end
 
 require 'minitest/autorun'
 
 class TestSudoku < Minitest::Test
+  def test_solver
+    @test_data.each { |hash|
+      s = init_sudoku(hash[:puzzle])
+      assert_equal hash[:solution], solve(s)
+    }
+  end
+
   def setup
     @test_data = [
       {
@@ -179,12 +183,6 @@ class TestSudoku < Minitest::Test
         ]
       }
     ]
-  end
-
-  def test_solver
-    @test_data.each {
-      assert_equal Sudoku.new(_1[:puzzle]).solve, _1[:solution]
-    }
   end
 end
 
