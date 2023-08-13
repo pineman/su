@@ -1,17 +1,17 @@
 require_relative 'solver'
 
 def seed
-  box0 = (1..9).to_a.shuffle
-  box1r1 = ((1..9).to_a - box0[..2]).shuffle[..2]
+  box0 = [*1..9].shuffle
+  box1r1 = ([*1..9] - box0[..2]).shuffle[..2]
 
   while true
-    box1r2 = ((1..9).to_a - box1r1 - box0[3..5]).shuffle[..2]
-    box1r3 = ((1..9).to_a - box1r1 - box1r2 - box0[6..9]).shuffle[..2]
+    box1r2 = ([*1..9] - box1r1 - box0[3..5]).shuffle[..2]
+    box1r3 = ([*1..9] - box1r1 - box1r2 - box0[6..9]).shuffle[..2]
     break if box1r3.size == 3
   end
 
   def complete(a)
-    a + ((1..9).to_a - a).shuffle
+    a + ([*1..9] - a).shuffle
   end
   row1 = complete(box0[..2] + box1r1)
   row2 = complete(box0[3..5] + box1r2)
