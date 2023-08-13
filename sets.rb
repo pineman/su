@@ -15,7 +15,6 @@ def possible?(grid, r, c, m)
 end
 
 def possible_sets(grid)
-  # TODO: compute once and update on each step, like possible_positions
   rows = grid.rows.map.with_index { |row, r|
     ([*1..9] - row).map { |m|
       [m, row.map.with_index { |_, c|
