@@ -31,6 +31,7 @@ def random_cell(s)
   end
 end
 
+# TODO: not the same algo as the article
 def gen
   s = init_sudoku(seed)
   s = solve_first(s)
@@ -56,11 +57,10 @@ end
 
 def test
   score = []
-  100.times do
+  1000.times do
     s = gen
     score << s.bf*100 + missing_cells(s)
   end
   pp score.tally.sort_by { _1 }
 end
 test
-

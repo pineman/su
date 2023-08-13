@@ -160,16 +160,20 @@ def no_moves?(s)
   s.moves.flatten.compact.empty?
 end
 
+def best_moves(s)
+  by_pos = best_by_position(s.moves)
+  return by_pos if by_pos.size == 1
+  [by_pos, best_by_sets(s)].min_by { _1.size }
+end
+
 # Return rows matrix if solved, false otherwise
 def solve_first(s)
   return s if done?(s)
   return false if no_moves?(s)
 
-  by_pos = best_by_position(s.moves)
-  by_sets = best_by_sets(s)
-  best = by_sets.size < by_pos.size ? by_sets : by_pos
-  s.bf += (best.size - 1)**2
-  best.each do |move|
+  moves = best_moves(s)
+  s.bf += (moves.size - 1)**2
+  moves.each do |move|
     new = move(s, move)
     solved = solve_first(new)
     return solved if solved
@@ -181,15 +185,12 @@ def solve_all(s)
   return [s] if done?(s)
   return [] if no_moves?(s)
 
-  by_pos = best_by_position(s.moves)
-  by_sets = best_by_sets(s)
-  best = by_sets.size < by_pos.size ? by_sets : by_pos
-  s.bf += (best.size - 1)**2
+  moves = best_moves(s)
+  s.bf += (moves.size - 1)**2
   sols = []
-  best.each do |move|
+  moves.each do |move|
     new = move(s, move)
     sols += solve_all(new)
   end
   sols
 end
-
