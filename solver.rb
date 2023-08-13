@@ -62,14 +62,24 @@ def possible_positions(grid)
       in_row = nums(grid.rows[r])
       in_col = nums(grid.cols[c])
       in_box = nums(grid.boxes[rc2box(r, c).first])
-      (1..9).to_a - in_row - in_col - in_box
+      [*1..9] - in_row - in_col - in_box
     }
   }
 end
 
+def deep_copy_sudoku(s)
+  new_grid = Grid.new(
+    s.grid.rows.map { |row| row.map(&:clone) },
+    s.grid.cols.map { |col| col.map(&:clone) },
+    s.grid.boxes.map { |box| box.map(&:clone) }
+  )
+  new_moves = s.moves.map { |row| row.map { |nums| nums&.map(&:clone) } }
+  Sudoku.new(new_grid, new_moves, s.bf)
+end
+
 Move = Struct.new(:row, :col, :num)
-def move(sudoku, m)
-  new = Marshal.load(Marshal.dump(sudoku)) # I miss elixir already
+def move(s, m)
+  new = deep_copy_sudoku(s)
   box, i = rc2box(m.row, m.col)
 
   new.grid.rows[m.row][m.col] = m.num
@@ -119,7 +129,7 @@ end
 def best_by_sets(s)
   # TODO: compute once and update on each step, like moves?
   rows = s.grid.rows.map.with_index { |row, r|
-    ((1..9).to_a - row).map { |m|
+    ([*1..9] - row).map { |m|
       pos = row.map.with_index { |_, c|
         [r, c] if possible?(s, r, c, m)
       }
@@ -127,7 +137,7 @@ def best_by_sets(s)
     }
   }
   cols = s.grid.cols.map.with_index { |col, c|
-    ((1..9).to_a - col).map { |m|
+    ([*1..9] - col).map { |m|
       pos = col.map.with_index { |_, r|
         [r, c] if possible?(s, r, c, m)
       }
@@ -135,7 +145,7 @@ def best_by_sets(s)
     }
   }
   boxes = s.grid.boxes.map.with_index { |box, b|
-    ((1..9).to_a - box).map { |m|
+    ([*1..9] - box).map { |m|
       pos = box.map.with_index { |_, i|
         r, c = box2rc(b, i)
         [r, c] if possible?(s, r, c, m)
