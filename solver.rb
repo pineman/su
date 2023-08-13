@@ -67,26 +67,27 @@ def possible_positions(grid)
   }
 end
 
-def move(sudoku, row, col, num)
-  new = Marshal.load(Marshal.dump(sudoku))
-  box, i = rc2box(row, col)
+Move = Struct.new(:row, :col, :num)
+def move(sudoku, m)
+  new = Marshal.load(Marshal.dump(sudoku)) # I miss elixir already
+  box, i = rc2box(m.row, m.col)
 
-  new.grid.rows[row][col] = num
-  new.grid.cols[col][row] = num
-  new.grid.boxes[box][i] = num
+  new.grid.rows[m.row][m.col] = m.num
+  new.grid.cols[m.col][m.row] = m.num
+  new.grid.boxes[box][i] = m.num
 
-  new.moves[row][col] = nil
-  new.moves[row].each.with_index { |_, i|
-    next unless new.moves[row][i]
-    new.moves[row][i] -= [num]
+  new.moves[m.row][m.col] = nil
+  new.moves[m.row].each.with_index { |_, i|
+    next unless new.moves[m.row][i]
+    new.moves[m.row][i] -= [m.num]
   }
   new.moves.each.with_index { |_, i|
-    next unless new.moves[i][col]
-    new.moves[i][col] -= [num]
+    next unless new.moves[i][m.col]
+    new.moves[i][m.col] -= [m.num]
   }
-  rc4box(rc2box(row, col).first).each { |r, c|
+  rc4box(rc2box(m.row, m.col).first).each { |r, c|
     next unless new.moves[r][c]
-    new.moves[r][c] -= [num]
+    new.moves[r][c] -= [m.num]
   }
 
   new
@@ -102,7 +103,9 @@ def best_by_position(moves)
       end
     }
   }
-  [min_r, min_c]
+  moves[min_r][min_c].map { |num|
+    Move.new(min_r, min_c, num)
+  }
 end
 
 def possible?(s, r, c, m)
@@ -140,10 +143,13 @@ def best_by_sets(s)
       [m, pos.compact]
     }
   }
-  (rows + cols + boxes)
+  best_set = (rows + cols + boxes)
     .flatten(1)
     .sort_by { |_, positions| positions.length }
     .first
+  best_set[1].map { |r, c|
+    Move.new(r, c, best_set[0])
+  }
 end
 
 def done?(s)
@@ -159,23 +165,14 @@ def solve_first(s)
   return s if done?(s)
   return false if no_moves?(s)
 
-  row, col = best_by_position(s.moves)
-  best_set = best_by_sets(s)
-
-  if best_set[1].size < s.moves[row][col].size
-    s.bf += (best_set[1].size - 1)**2
-    best_set[1].each do |row, col|
-      new = move(s, row, col, best_set[0])
-      solved = solve_first(new)
-      return solved if solved
-    end
-  else
-    s.bf += (s.moves[row][col].size - 1)**2
-    s.moves[row][col].each do |num|
-      new = move(s, row, col, num)
-      solved = solve_first(new)
-      return solved if solved
-    end
+  by_pos = best_by_position(s.moves)
+  by_sets = best_by_sets(s)
+  best = by_sets.size < by_pos.size ? by_sets : by_pos
+  s.bf += (best.size - 1)**2
+  best.each do |move|
+    new = move(s, move)
+    solved = solve_first(new)
+    return solved if solved
   end
   false
 end
@@ -184,22 +181,14 @@ def solve_all(s)
   return [s] if done?(s)
   return [] if no_moves?(s)
 
+  by_pos = best_by_position(s.moves)
+  by_sets = best_by_sets(s)
+  best = by_sets.size < by_pos.size ? by_sets : by_pos
+  s.bf += (best.size - 1)**2
   sols = []
-  row, col = best_by_position(s.moves)
-  best_set = best_by_sets(s)
-
-  if best_set[1].size < s.moves[row][col].size
-    s.bf += (best_set[1].size - 1)**2
-    best_set[1].each do |row, col|
-      new = move(s, row, col, best_set[0])
-      sols += solve_all(new)
-    end
-  else
-    s.bf += (s.moves[row][col].size - 1)**2
-    s.moves[row][col].each do |num|
-      new = move(s, row, col, num)
-      sols += solve_all(new)
-    end
+  best.each do |move|
+    new = move(s, move)
+    sols += solve_all(new)
   end
   sols
 end
