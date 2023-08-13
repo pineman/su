@@ -30,3 +30,4 @@ def best_by_position(moves)
     Move.new(min_r, min_c, num)
   }
 end
+

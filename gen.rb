@@ -24,43 +24,47 @@ def seed
   rows
 end
 
-def random_cell(s)
+def random_filled_cell(s)
   while true
     r, c = [rand(9), rand(9)]
     return [r, c] if s.grid.rows[r][c] != 0
   end
 end
 
-# TODO: not the same algo as the article
-def gen
-  s = init_sudoku(seed)
-  s = solve_first(s)
-  bf = 0
+def random_empty_cell(s)
   while true
-    r, c = random_cell(s)
-    backup = s.grid.rows[r][c]
-    s.grid.rows[r][c] = 0
-    sols = solve_all(init_sudoku(s.grid.rows))
-    if sols.size == 1
-      bf = sols.first.bf
+    r, c = [rand(9), rand(9)]
+    return [r, c] if s.grid.rows[r][c] == 0
+  end
+end
+
+def score(s)
+  s.bf*100 + s.grid.rows.sum { |row| row.count { |cell| cell == 0 } }
+end
+
+def try_gen(goal)
+  solution = solve_first(init_sudoku(seed))
+  best = deep_copy_sudoku(solution)
+  best.bf = 0
+  best_score = score(best)
+  300.times do
+    new = deep_copy_sudoku(best)
+    if rand(2) == 1 || done?(new)
+      r, c = random_filled_cell(new)
+      new.grid.rows[r][c] = 0
     else
-      s.grid.rows[r][c] = backup
-      s.bf = bf
-      break s
+      r, c = random_empty_cell(new)
+      new.grid.rows[r][c] = solution.grid.rows[r][c]
     end
+    sol = one_solution?(init_sudoku(new.grid.rows))
+    next if !sol
+    exit(1) if solve_all(init_sudoku(new.grid.rows)).size > 1
+    new.bf = sol.bf
+    next if score(new) <= best_score
+    best = deep_copy_sudoku(new)
+    best_score = score(best)
+    break if best_score >= goal
   end
+  {puzzle: best.grid.rows, solution: solution.grid.rows, score: best_score}
 end
 
-def missing_cells(s)
-  s.grid.rows.sum { |row| row.count { |cell| cell == 0 } }
-end
-
-def test
-  score = []
-  1000.times do
-    s = gen
-    score << s.bf*100 + missing_cells(s)
-  end
-  pp score.tally.sort_by { _1 }
-end
-test

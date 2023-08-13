@@ -1,7 +1,8 @@
-require_relative 'solver'
 require 'minitest/autorun'
 
-class TestSudoku < Minitest::Test
+require_relative 'solver'
+
+class TestSolver < Minitest::Test
   make_my_diffs_pretty!
 
   def test_box2rc
@@ -48,6 +49,17 @@ class TestSudoku < Minitest::Test
     (@backtracking + @trivial).each { |hash|
       s = init_sudoku(hash[:puzzle])
       assert_equal 1, solve_all(s).size
+    }
+  end
+
+  def test_multiple
+    @number.each { |hash|
+      s = init_sudoku(hash[:puzzle])
+      assert_equal hash[:solutions] != 1, one_solution?(s).nil?
+    }
+    (@backtracking + @trivial).each { |hash|
+      s = init_sudoku(hash[:puzzle])
+      assert_equal hash[:solution], one_solution?(s).grid.rows
     }
   end
 

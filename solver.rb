@@ -94,7 +94,7 @@ end
 # Return rows matrix if solved, false otherwise
 def solve_first(s)
   return s if done?(s)
-  return false if no_moves?(s)
+  return nil if no_moves?(s)
 
   moves = best_moves(s)
   s.bf += (moves.size - 1)**2
@@ -103,7 +103,7 @@ def solve_first(s)
     solved = solve_first(new)
     return solved if solved
   end
-  false
+  nil
 end
 
 def solve_all(s)
@@ -119,3 +119,25 @@ def solve_all(s)
   end
   sols
 end
+
+def one_solution?(s)
+  def search(s, sols)
+    return if sols.size > 1
+    return sols << s if done?(s)
+    return if no_moves?(s)
+
+    moves = best_moves(s)
+    s.bf += (moves.size - 1)**2
+    moves.each do |move|
+      new = move(s, move)
+      search(new, sols)
+      return if sols.size > 1
+    end
+  end
+
+  sols = []
+  search(s, sols)
+  return nil if sols.size != 1
+  sols.first
+end
+
