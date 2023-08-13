@@ -130,27 +130,24 @@ def best_by_sets(s)
   # TODO: compute once and update on each step, like moves?
   rows = s.grid.rows.map.with_index { |row, r|
     ([*1..9] - row).map { |m|
-      pos = row.map.with_index { |_, c|
+      [m, row.map.with_index { |_, c|
         [r, c] if possible?(s, r, c, m)
-      }
-      [m, pos.compact]
+      }.compact]
     }
   }
   cols = s.grid.cols.map.with_index { |col, c|
     ([*1..9] - col).map { |m|
-      pos = col.map.with_index { |_, r|
+      [m, col.map.with_index { |_, r|
         [r, c] if possible?(s, r, c, m)
-      }
-      [m, pos.compact]
+      }.compact]
     }
   }
   boxes = s.grid.boxes.map.with_index { |box, b|
     ([*1..9] - box).map { |m|
-      pos = box.map.with_index { |_, i|
+      [m, box.map.with_index { |_, i|
         r, c = box2rc(b, i)
         [r, c] if possible?(s, r, c, m)
-      }
-      [m, pos.compact]
+      }.compact]
     }
   }
   best_set = (rows + cols + boxes)
