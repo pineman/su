@@ -10,8 +10,8 @@ def init_sudoku(rows)
 end
 
 def rc2box(r, c)
-  box = (r / 3).floor * 3 + (c / 3).floor;
-  boxi = (r % 3) * 3 + (c % 3);
+  box = r / 3 * 3 + c / 3
+  boxi = r % 3 * 3 + c % 3;
   [box, boxi]
 end
 
