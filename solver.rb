@@ -6,7 +6,7 @@ Sudoku = Struct.new(:grid, :moves, :bf)
 def init_sudoku(rows)
   grid = matrix_to_grid(rows)
   validate_puzzle(grid)
-  Sudoku.new(grid, possible_steps(grid), 0)
+  Sudoku.new(grid, possible_positions(grid), 0)
 end
 
 def rc2box(r, c)
@@ -55,7 +55,7 @@ def nums(array)
   array.filter { _1 != 0 }
 end
 
-def possible_steps(grid)
+def possible_positions(grid)
   grid.rows.map.with_index { |row, r|
     row.map.with_index { |num, c|
       next unless num == 0
@@ -92,7 +92,7 @@ def move(sudoku, row, col, num)
   new
 end
 
-def best_moves(moves)
+def best_by_position(moves)
   min, min_r, min_c = 10, nil, nil
   moves.each.with_index { |row, r|
     row.each.with_index { |nums, c|
@@ -113,7 +113,7 @@ def possible?(s, r, c, m)
   true
 end
 
-def get_sets(s)
+def best_by_sets(s)
   # TODO: compute once and update on each step, like moves?
   rows = s.grid.rows.map.with_index { |row, r|
     ((1..9).to_a - row).map { |m|
@@ -140,12 +140,7 @@ def get_sets(s)
       [m, pos.compact]
     }
   }
-  {rows:, cols:, boxes:}
-end
-
-def best_set_and_value(s)
-  sets = get_sets(s)
-  (sets[:rows] + sets[:cols] + sets[:boxes])
+  (rows + cols + boxes)
     .flatten(1)
     .sort_by { |_, positions| positions.length }
     .first
@@ -164,8 +159,8 @@ def solve_first(s)
   return s if done?(s)
   return false if no_moves?(s)
 
-  row, col = best_moves(s.moves)
-  best_set = best_set_and_value(s)
+  row, col = best_by_position(s.moves)
+  best_set = best_by_sets(s)
 
   if best_set[1].size < s.moves[row][col].size
     s.bf += (best_set[1].size - 1)**2
@@ -190,8 +185,8 @@ def solve_all(s)
   return [] if no_moves?(s)
 
   sols = []
-  row, col = best_moves(s.moves)
-  best_set = best_set_and_value(s)
+  row, col = best_by_position(s.moves)
+  best_set = best_by_sets(s)
 
   if best_set[1].size < s.moves[row][col].size
     s.bf += (best_set[1].size - 1)**2
