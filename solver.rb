@@ -3,7 +3,7 @@ require_relative 'pos'
 require_relative 'sets'
 
 Grid = Struct.new(:rows, :cols, :boxes)
-Sudoku = Struct.new(:grid, :bf, :pos, :sets)
+Sudoku = Struct.new(:grid, :bf, :pos)
 Move = Struct.new(:row, :col, :num)
 
 def init_sudoku(rows)
@@ -27,7 +27,7 @@ def init_sudoku(rows)
     raise "duplicate in box #{d+1}"
   end
 
-  Sudoku.new(grid, 0, possible_positions(grid), possible_sets(grid))
+  Sudoku.new(grid, 0, possible_positions(grid))
 end
 
 def rc2box(r, c)
@@ -43,8 +43,7 @@ def deep_copy_sudoku(s)
     s.grid.boxes.map { |box| box.map(&:clone) }
   )
   new_pos = s.pos.map { |row| row.map { |nums| nums&.map(&:clone) } }
-  new_sets = s.sets.map { |concat_set| concat_set.map { |set| [set[0], set[1].map(&:clone)] } }
-  Sudoku.new(new_grid, s.bf, new_pos, new_sets)
+  Sudoku.new(new_grid, s.bf, new_pos)
 end
 
 def rc4box(box)
@@ -75,20 +74,6 @@ def move(s, m)
     new.pos[r][c] -= [m.num]
   }
 
-  new.sets[m.row].filter! { |num, pos| num != m.num }
-  new.sets[9+m.col].filter! { |num, pos| num != m.num }
-  new.sets[18+box].filter! { |num, pos| num != m.num }
-
-  new.sets.each.with_index { |concat_set, concat_set_i|
-    concat_set.each.with_index { |set, set_i|
-      if set[0] == m.num
-        set[1].reject! { |r, c| r == m.row || c == m.col || rc4box(box).include?([r,c]) }
-      elsif set[1].include?([m.row, m.col])
-        set[1].reject! { |r, c| [r, c] == [m.row, m.col] }
-      end
-    }
-  }
-
   new
 end
 
@@ -103,7 +88,7 @@ end
 def best_moves(s)
   by_pos = best_by_position(s.pos)
   return by_pos if by_pos.size == 1
-  [by_pos, best_by_sets(s.sets)].min_by { _1.size }
+  [by_pos, best_by_sets(s.grid)].min_by { _1.size }
 end
 
 # Return rows matrix if solved, false otherwise

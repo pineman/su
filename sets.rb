@@ -41,8 +41,8 @@ def possible_sets(grid)
   rows + cols + boxes
 end
 
-def best_by_sets(sets)
-  best_set = sets
+def best_by_sets(grid)
+  best_set = possible_sets(grid)
     .flatten(1)
     .sort_by { |_, positions| positions.length }
     .first
