@@ -11,8 +11,14 @@ end
 
 def rc2box(r, c)
   box = r / 3 * 3 + c / 3
-  boxi = r % 3 * 3 + c % 3;
-  [box, boxi]
+  i = r % 3 * 3 + c % 3;
+  [box, i]
+end
+
+def box2rc(box, i)
+  r = box / 3 * 3 + i / 3
+  c = box % 3 * 3 + i % 3
+  [r, c]
 end
 
 def rc4box(box)
@@ -45,10 +51,11 @@ def validate_puzzle(grid)
   end
 end
 
+def nums(array)
+  array.filter { _1 != 0 }
+end
+
 def possible_steps(grid)
-  def nums(array)
-    array.filter { _1 != 0 }
-  end
   grid.rows.map.with_index { |row, r|
     row.map.with_index { |num, c|
       next unless num == 0
@@ -98,6 +105,52 @@ def best_moves(moves)
   [min_r, min_c]
 end
 
+def possible?(s, r, c, m)
+  return false if s.grid.rows[r][c] != 0
+  return false if s.grid.rows[r].include?(m)
+  return false if s.grid.cols[c].include?(m)
+  return false if s.grid.boxes[rc2box(r, c)[0]].include?(m)
+  true
+end
+
+def get_sets(s)
+  # TODO: compute once and update on each step, like moves?
+  rows = s.grid.rows.map.with_index { |row, r|
+    ((1..9).to_a - row).map { |m|
+      pos = row.map.with_index { |_, c|
+        [r, c] if possible?(s, r, c, m)
+      }
+      [m, pos.compact]
+    }
+  }
+  cols = s.grid.cols.map.with_index { |col, c|
+    ((1..9).to_a - col).map { |m|
+      pos = col.map.with_index { |_, r|
+        [r, c] if possible?(s, r, c, m)
+      }
+      [m, pos.compact]
+    }
+  }
+  boxes = s.grid.boxes.map.with_index { |box, b|
+    ((1..9).to_a - box).map { |m|
+      pos = box.map.with_index { |_, i|
+        r, c = box2rc(b, i)
+        [r, c] if possible?(s, r, c, m)
+      }
+      [m, pos.compact]
+    }
+  }
+  {rows:, cols:, boxes:}
+end
+
+def best_set_and_value(s)
+  sets = get_sets(s)
+  (sets[:rows] + sets[:cols] + sets[:boxes])
+    .flatten(1)
+    .sort_by { |_, positions| positions.length }
+    .first
+end
+
 def done?(s)
   s.grid.rows.all? { |row| row.all? { |num| num != 0 } }
 end
@@ -110,12 +163,24 @@ end
 def solve_first(s)
   return s if done?(s)
   return false if no_moves?(s)
+
   row, col = best_moves(s.moves)
-  s.bf += (s.moves[row][col].size - 1)**2
-  s.moves[row][col].each do |num|
-    new = move(s, row, col, num)
-    solved = solve_first(new)
-    return solved if solved
+  best_set = best_set_and_value(s)
+
+  if best_set[1].size < s.moves[row][col].size
+    s.bf += (best_set[1].size - 1)**2
+    best_set[1].each do |row, col|
+      new = move(s, row, col, best_set[0])
+      solved = solve_first(new)
+      return solved if solved
+    end
+  else
+    s.bf += (s.moves[row][col].size - 1)**2
+    s.moves[row][col].each do |num|
+      new = move(s, row, col, num)
+      solved = solve_first(new)
+      return solved if solved
+    end
   end
   false
 end
@@ -123,12 +188,23 @@ end
 def solve_all(s)
   return [s] if done?(s)
   return [] if no_moves?(s)
+
   sols = []
   row, col = best_moves(s.moves)
-  s.bf += (s.moves[row][col].size - 1)**2
-  s.moves[row][col].each do |num|
-    new = move(s, row, col, num)
-    sols += solve_all(new)
+  best_set = best_set_and_value(s)
+
+  if best_set[1].size < s.moves[row][col].size
+    s.bf += (best_set[1].size - 1)**2
+    best_set[1].each do |row, col|
+      new = move(s, row, col, best_set[0])
+      sols += solve_all(new)
+    end
+  else
+    s.bf += (s.moves[row][col].size - 1)**2
+    s.moves[row][col].each do |num|
+      new = move(s, row, col, num)
+      sols += solve_all(new)
+    end
   end
   sols
 end
