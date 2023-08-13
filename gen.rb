@@ -27,47 +27,40 @@ end
 def random_cell(s)
   while true
     r, c = [rand(9), rand(9)]
-    return [r, c] if s[r][c] != 0
+    return [r, c] if s.grid.rows[r][c] != 0
   end
 end
 
 def gen
-  rows = seed
-  s = init_sudoku(rows)
+  s = init_sudoku(seed)
   s = solve_first(s)
+  bf = 0
   while true
     r, c = random_cell(s)
-    backup = s[r][c]
-    s[r][c] = 0
-    next unless solve_all(init_sudoku(s)).size >= 2
-    s[r][c] = backup
-    break s
+    backup = s.grid.rows[r][c]
+    s.grid.rows[r][c] = 0
+    sols = solve_all(init_sudoku(s.grid.rows))
+    if sols.size == 1
+      bf = sols.first.bf
+    else
+      s.grid.rows[r][c] = backup
+      s.bf = bf
+      break s
+    end
   end
 end
 
 def missing_cells(s)
-  c = 0
-  s.each { |row| row.each { |cell| c += 1 if cell == 0 } }
-  c
+  s.grid.rows.sum { |row| row.count { |cell| cell == 0 } }
 end
 
 def test
-  puzzles = []
-  missing = []
-  took = []
-  while true
-    g = gen
-    puzzles << g
-    missing << missing_cells(g)
-    s = init_sudoku(g)
-    t = Benchmark.measure {
-      solve_first(s)
-    }.total*1000
-    took << t.round(1)
-    break if puzzles.size == 1000
+  score = []
+  100.times do
+    s = gen
+    score << s.bf*100 + missing_cells(s)
   end
-  pp missing.tally.sort_by { _1 }
-  pp took.tally.sort_by { _1 }
+  pp score.tally.sort_by { _1 }
 end
-
+test
 

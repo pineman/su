@@ -1,12 +1,12 @@
 require 'benchmark'
 
 Grid = Struct.new(:rows, :cols, :boxes)
-Sudoku = Struct.new(:grid, :moves)
+Sudoku = Struct.new(:grid, :moves, :bf)
 
 def init_sudoku(rows)
   grid = matrix_to_grid(rows)
   validate_puzzle(grid)
-  Sudoku.new(grid, possible_steps(grid))
+  Sudoku.new(grid, possible_steps(grid), 0)
 end
 
 def rc2box(r, c)
@@ -108,9 +108,10 @@ end
 
 # Return rows matrix if solved, false otherwise
 def solve_first(s)
-  return s.grid.rows if done?(s)
+  return s if done?(s)
   return false if no_moves?(s)
   row, col = best_moves(s.moves)
+  s.bf += (s.moves[row][col].size - 1)**2
   s.moves[row][col].each do |num|
     new = move(s, row, col, num)
     solved = solve_first(new)
@@ -120,10 +121,11 @@ def solve_first(s)
 end
 
 def solve_all(s)
-  return [s.grid.rows] if done?(s)
+  return [s] if done?(s)
   return [] if no_moves?(s)
   sols = []
   row, col = best_moves(s.moves)
+  s.bf += (s.moves[row][col].size - 1)**2
   s.moves[row][col].each do |num|
     new = move(s, row, col, num)
     sols += solve_all(new)
