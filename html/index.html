@@ -1,7 +1,5 @@
 <html>
   <head>
-    <script src="https://cdn.jsdelivr.net/npm/ruby-3_2-wasm-wasi@2.1.0/dist/browser.script.iife.js"></script>
-    <script type="text/ruby" src="sudoku.rb"></script>
   </head>
   <body>
     <div id="sudoku">
@@ -68,16 +66,16 @@
         });
       });
     }
-  </script>
-  <script type="text/ruby">
-    require 'json'
-    require "js"
-    document = JS.global[:document]
-    document.querySelector("button").addEventListener "click" do |e|
-      diff = JS::eval('return document.querySelector("input").value').to_i
-      str = gen(diff).to_json
-      JS::eval("draw(#{str})")
-    end
+
+    document.querySelector("button").addEventListener("click", (e) => {
+      diff = document.querySelector("input").value
+      // TODO
+      // * retry until score is inside 100-bucket
+      // * fire like 10 of these at the same time and use the fastest valid one
+      fetch(`/gen?diff=${diff}`)
+        .then((r) => r.json())
+        .then((r) => draw(r))
+    })
   </script>
   <style>
     body {
