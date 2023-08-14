@@ -79,12 +79,11 @@ def test
   score = []
   500.times do
     p Benchmark.measure {
-      r = gen
+      r = gen(48)
       pp r
       score << r[:score]
     }.total
   end
   pp score.group_by { _1/100 }.transform_values { _1.size }.sort_by {_1}
 end
-test
 
