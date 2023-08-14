@@ -48,8 +48,7 @@ def gen(try_goal=9999999)
   best.bf = 0
   best_score = score(best)
   catch :done do
-    # Would use Timeout::timeout but no thread support in wasm yet
-    100.times do
+    200.times do
       new = deep_copy_sudoku(best)
       5.times do
         if rand(2) == 1 || done?(new)
@@ -79,7 +78,7 @@ def test
   score = []
   500.times do
     p Benchmark.measure {
-      r = gen(48)
+      r = gen(200)
       pp r
       score << r[:score]
     }.total
