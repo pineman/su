@@ -12,6 +12,5 @@ end
 get '/gen' do
   content_type :json
   diff = params['diff'].to_i
-  p diff
   gen(diff).to_json
 end
