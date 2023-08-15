@@ -5,7 +5,9 @@
     <div id="sudoku">
       <div id="grid"></div>
       <div id="numbers"></div>
-      <button>gen</button><input type="number" min="10" max="148" value="48"></input>
+      <div id="controls">
+        <button>new</button><input type="number" min="10" max="148" value="48"></input>
+      </div>
     </div>
   </body>
   <script>
@@ -45,7 +47,7 @@
     const selectNumber = (e) => {
       sel = e.target.innerText;
       document.querySelectorAll(".number").forEach((e) => e.style.backgroundColor = 'lightgrey')
-      e.target.style.backgroundColor = 'lightpink';
+      e.target.style.backgroundColor = 'grey';
     };
     const numbers = document.querySelector("#numbers");
     for (let i = 0; i < 9; i++) {
@@ -83,19 +85,19 @@
       padding: 0;
       height: 100dvh;
       width: 100dvw;
+      box-sizing: border-box;
+      font-size: 3rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-sizing: border-box;
-      font-size: 40px;
     }
     #grid {
       display: grid;
       grid-template-columns: repeat(9, 1fr);
       grid-template-rows: repeat(9, 1fr);
       border: 1px solid black;
-      width: calc(13.5em+10px);
-      height: calc(13.5em+10px);
+      max-width: 100%;
+      max-height: 100%;
       background-color: lightgrey;
     }
     .cell {
@@ -103,14 +105,9 @@
       justify-content: center;
       align-items: center;
       border: 1px dotted black;
-      width: 1.5em;
-      height: 1.5em;
     }
     #numbers {
-      height: 80px;
-      padding: 0.75em 10%;
       display: flex;
-      justify-content: space-between;
     }
     .number {
       background-color: lightgrey;
@@ -120,6 +117,8 @@
       justify-content: center;
       border-radius: 5px;
       width: 0.9em;
+    }
+    #controls {
     }
   </style>
 </html>
