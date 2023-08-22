@@ -10,6 +10,9 @@ get '/' do
 end
 
 get '/gen' do
+  # easy - ]0, 100[
+  # medium - [100, 300[
+  # good luck - [300, +inf[
   content_type :json
   diff = params['diff'].to_i
   gen(diff).to_json

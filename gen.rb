@@ -42,7 +42,7 @@ def score(s)
   s.bf*100 + s.grid.rows.sum { |row| row.count { |cell| cell == 0 } }
 end
 
-def gen(try_goal=9999999)
+def _gen(try_goal=9999999)
   solution = solve_first(init_sudoku(seed))
   best = deep_copy_sudoku(solution)
   best.bf = 0
@@ -51,6 +51,7 @@ def gen(try_goal=9999999)
     200.times do
       new = deep_copy_sudoku(best)
       5.times do
+        throw :done if best_score >= try_goal
         if rand(2) == 1 || done?(new)
           r, c = random_filled_cell(new)
           new.grid.rows[r][c] = 0
@@ -67,11 +68,16 @@ def gen(try_goal=9999999)
 
         best = deep_copy_sudoku(new)
         best_score = score(best)
-        throw :done if best_score >= try_goal
       end
     end
   end
   {puzzle: best.grid.rows, solution: solution.grid.rows, score: best_score}
+end
+
+def gen(diff)
+  r = nil
+  t = Benchmark.measure { r = _gen(diff) }
+  r.merge!(took: t.real.round(3))
 end
 
 def test

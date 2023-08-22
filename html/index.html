@@ -1,28 +1,111 @@
-<html>
+<!DOCTYPE html>
+<html lang="en-US">
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <title>Sudoku</title>
   </head>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 5vmin;
+      height: 100dvh;
+      width: 100dvw;
+      font-size: 5vmin;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+          Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #controls-wrap {
+      position: absolute;
+      z-index: 1;
+      height: 80vmin;
+      width: 80vmin;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      font-size: 0.5em;
+    }
+    #controls {
+      background-color: lightgrey;
+      border-radius: 0.5em;
+      padding: 0.5em;
+    }
+    #new {
+      margin: 0.5em 0.5em 0;
+      padding: 0.5em 1em;
+      font-size: inherit;
+      background-color: grey;
+      border: 1px solid grey;
+      border-radius: 0.5em;
+    }
+    #grid {
+      opacity: 0.2;
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      grid-template-rows: repeat(9, 1fr);
+      height: 80vmin;
+      width: 80vmin;
+      border: 1px solid black;
+      background-color: lightgrey;
+    }
+    .cell {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px dotted black;
+    }
+    #numbers {
+      display: flex;
+      justify-content: space-evenly;
+      margin: 2vmin 0 0;
+      height: 8vmin;
+    }
+    .number {
+      background-color: lightgrey;
+      display: flex;
+      border: 2px solid black;
+      align-items: center;
+      justify-content: center;
+      border-radius: 5px;
+      width: 1em;
+    }
+  </style>
   <body>
     <div id="sudoku">
-      <div id="grid"></div>
-      <div id="numbers"></div>
-      <div id="controls">
-        <button>new</button><input type="number" min="10" max="148" value="48"></input>
+      <div id="controls-wrap">
+        <div id="controls">
+          <div><input name="diff" value="easy" type="radio">easy</input></div>
+          <div><input name="diff" value="medium" type="radio" checked>medium</input></div>
+          <div><input name="diff" value="hard" type="radio">good luck</input></div>
+          <button id="new">new game</button>
+        </div>
       </div>
+      <div id="grid">
+      </div>
+      <div id="numbers"></div>
     </div>
   </body>
   <script>
     let sel = undefined;
+    const grid = document.querySelector("#grid");
     const test = (e) => {
       [_, r, c] = e.target.id;
       if (solution[r][c] == sel) {
         e.target.innerText = sel;
         puzzle[r][c] = sel
         if (!puzzle.flat().includes(0)) {
-          document.querySelector("#grid").style.backgroundColor = 'lightgreen';
+          grid.style.opacity = 0.1;
+          document.querySelector('#controls-wrap').style.display = 'flex';
         }
       }
     };
-    const grid = document.querySelector("#grid");
     for (let i = 0; i < 9; i++) {
       for (let j = 0; j < 9; j++) {
         const cell = document.createElement("div");
@@ -67,10 +150,15 @@
           document.querySelector(`#c${r}${c}`).innerText = num == 0 ? "" : num;
         });
       });
+      document.querySelector('#controls-wrap').style.display = 'none';
+      document.querySelector('#grid').style.opacity = 1;
+      document.querySelector("#new").innerText = 'new game'
     }
 
-    document.querySelector("button").addEventListener("click", (e) => {
-      diff = document.querySelector("input").value
+    document.querySelector("#new").addEventListener("click", (e) => {
+      e.target.innerText = 'loading...'
+      diff = document.querySelector('input[name="diff"]:checked').value;
+      diff = {'easy': 45, 'medium': 145, 'hard': 345}[diff]
       // TODO
       // * retry until score is inside 100-bucket
       // * fire like 10 of these at the same time and use the fastest valid one
@@ -79,46 +167,4 @@
         .then((r) => draw(r))
     })
   </script>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      height: 100dvh;
-      width: 100dvw;
-      box-sizing: border-box;
-      font-size: 3rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #grid {
-      display: grid;
-      grid-template-columns: repeat(9, 1fr);
-      grid-template-rows: repeat(9, 1fr);
-      border: 1px solid black;
-      max-width: 100%;
-      max-height: 100%;
-      background-color: lightgrey;
-    }
-    .cell {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border: 1px dotted black;
-    }
-    #numbers {
-      display: flex;
-    }
-    .number {
-      background-color: lightgrey;
-      display: flex;
-      border: 2px solid black;
-      align-items: center;
-      justify-content: center;
-      border-radius: 5px;
-      width: 0.9em;
-    }
-    #controls {
-    }
-  </style>
 </html>
