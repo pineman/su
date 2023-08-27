@@ -10,4 +10,5 @@ got it to a reasonable performance level
 
 # IDEAS
 * rewrite it in javascript/something faster w/ wasm (rust :eyes:)
+* constraint solver? prolog??
 * would much rather a scheme or sbcl rewrite tho

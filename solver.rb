@@ -2,9 +2,9 @@ require 'benchmark'
 require_relative 'pos'
 require_relative 'sets'
 
-Grid = Struct.new(:rows, :cols, :boxes)
+Grid = Data.define(:rows, :cols, :boxes)
 Sudoku = Struct.new(:grid, :bf, :pos)
-Move = Struct.new(:row, :col, :num)
+Move = Data.define(:row, :col, :num)
 
 def init_sudoku(rows)
   cols = (0...9).map { |c| rows.map { |row| row[c] } }
