@@ -3,6 +3,9 @@ require 'json'
 
 require_relative 'gen'
 
+puts "mjit: #{RubyVM::MJIT.enabled?}"
+puts "yjit: #{RubyVM::YJIT.enabled?}"
+
 set :public_folder, 'html'
 
 get '/' do
@@ -12,7 +15,7 @@ end
 get '/gen' do
   # easy - ]0, 100[
   # medium - [100, 300[
-  # good luck - [300, +inf[
+  # hard - [300, +inf[
   content_type :json
   diff = params['diff'].to_i
   gen(diff).to_json

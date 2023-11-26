@@ -37,4 +37,5 @@ COPY --chown=ruby:ruby . .
 
 # Start the server
 EXPOSE 8080
+ENV RUBYOPT="--mjit"
 CMD ["bundle", "exec", "rackup", "--host", "0.0.0.0", "--port", "8080"]
