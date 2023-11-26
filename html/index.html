@@ -159,9 +159,6 @@
       e.target.innerText = 'loading...'
       diff = document.querySelector('input[name="diff"]:checked').value;
       diff = {'easy': 45, 'medium': 145, 'hard': 345}[diff]
-      // TODO
-      // * retry until score is inside 100-bucket
-      // * fire like 10 of these at the same time and use the fastest valid one
       fetch(`/gen?diff=${diff}`)
         .then((r) => r.json())
         .then((r) => draw(r))

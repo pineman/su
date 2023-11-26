@@ -45,6 +45,9 @@ def score(s)
 end
 
 def _gen(try_goal=9999999)
+  # TODO: how long this takes is sorta bimodal. so terminate once a certain
+  # time has been exceeded and try again, hoping to hit the fast mode, assuming
+  # the slow mode takes long enough to justify this (seems like it)
   solution = solve_first(init_sudoku(seed))
   best = deep_copy_sudoku(solution)
   best.bf = 0
