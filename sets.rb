@@ -43,10 +43,8 @@ end
 def best_by_sets(grid)
   best_set = possible_sets(grid)
     .flatten(1)
-    .sort_by { |_, positions| positions.length }
-    .first
+    .min_by { |_, positions| positions.length }
   best_set[1].map { |r, c|
     Move.new(r, c, best_set[0])
   }
 end
-

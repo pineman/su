@@ -11,7 +11,7 @@ def init_sudoku(rows)
   rows.each.with_index { |row, r|
     row.each.with_index { |content, c|
       box, i = rc2box(r, c)
-      boxes[box][i] = content;
+      boxes[box][i] = content
     }
   }
   grid = Grid.new(rows, cols, boxes)
@@ -31,7 +31,7 @@ end
 
 def rc2box(r, c)
   box = r / 3 * 3 + c / 3
-  i = r % 3 * 3 + c % 3;
+  i = r % 3 * 3 + c % 3
   [box, i]
 end
 
@@ -120,7 +120,7 @@ def solve_all(s)
 end
 
 def one_solution?(s)
-  def search(s, sols)
+  search = ->(s, sols) do
     return if sols.size > 1
     return sols << s if done?(s)
     return if no_moves?(s)
@@ -129,14 +129,13 @@ def one_solution?(s)
     s.bf += (moves.size - 1)**2
     moves.each do |move|
       new = move(s, move)
-      search(new, sols)
-      return if sols.size > 1
+      search.(new, sols)
+      break if sols.size > 1
     end
   end
 
   sols = []
-  search(s, sols)
+  search.(s, sols)
   return nil if sols.size != 1
   sols.first
 end
-

@@ -1,24 +1,26 @@
+require 'benchmark'
+
 require_relative 'solver'
 
 def seed
-  box1 = [*1..9].shuffle
-  box2r1 = ([*1..9] - box1[..2]).shuffle[..2]
+  box1 = [*1..9].shuffle!
+  box2r1 = ([*1..9] - box1[..2]).sample(3)
 
   while true
-    box2r2 = ([*1..9] - box2r1 - box1[3..5]).shuffle[..2]
-    box2r3 = ([*1..9] - box2r1 - box2r2 - box1[6..9]).shuffle[..2]
+    box2r2 = ([*1..9] - box2r1 - box1[3..5]).sample(3)
+    box2r3 = ([*1..9] - box2r1 - box2r2 - box1[6..9]).sample(3)
     break if box2r3.size == 3
   end
 
-  def complete(a)
-    a + ([*1..9] - a).shuffle
-  end
-  row1 = complete(box1[..2] + box2r1)
-  row2 = complete(box1[3..5] + box2r2)
-  row3 = complete(box1[6..] + box2r3)
+  complete = ->(a) {
+    a + ([*1..9] - a).shuffle!
+  }
+  row1 = complete.(box1[..2] + box2r1)
+  row2 = complete.(box1[3..5] + box2r2)
+  row3 = complete.(box1[6..] + box2r3)
 
   rows = [row1, row2, row3]
-  col1 = complete([row1[0], row2[0], row3[0]])
+  col1 = complete.([row1[0], row2[0], row3[0]])
   6.times { |i| rows << [col1[i+3]] + [0]*8 }
 
   rows
@@ -81,7 +83,6 @@ def gen(diff)
 end
 
 def test
-  require 'benchmark'
   score = []
   500.times do
     p Benchmark.measure {
@@ -89,5 +90,5 @@ def test
       score << r[:score]
     }.total
   end
-  pp score.group_by { _1/100 }.transform_values { _1.size }.sort_by {_1}
+  pp score.group_by { _1/100 }.transform_values { _1.size }.sort
 end

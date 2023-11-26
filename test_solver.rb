@@ -275,4 +275,3 @@ class TestSolver < Minitest::Test
     ]
   end
 end
-
