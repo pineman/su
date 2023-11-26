@@ -1,4 +1,3 @@
-require 'benchmark'
 require_relative 'pos'
 require_relative 'sets'
 

@@ -81,14 +81,13 @@ def gen(diff)
 end
 
 def test
+  require 'benchmark'
   score = []
   500.times do
     p Benchmark.measure {
       r = gen(200)
-      pp r
       score << r[:score]
     }.total
   end
   pp score.group_by { _1/100 }.transform_values { _1.size }.sort_by {_1}
 end
-
