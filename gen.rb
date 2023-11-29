@@ -1,4 +1,5 @@
 require 'benchmark'
+require 'timeout'
 
 require_relative 'solver'
 
@@ -54,26 +55,32 @@ def _gen(try_goal=9999999)
   best_score = score(best)
   catch :done do
     200.times do
-      new = deep_copy_sudoku(best)
-      5.times do
-        throw :done if best_score >= try_goal
-        if rand(2) == 1 || done?(new)
-          r, c = random_filled_cell(new)
-          new.grid.rows[r][c] = 0
-        else
-          r, c = random_empty_cell(new)
-          new.grid.rows[r][c] = solution.grid.rows[r][c]
-        end
+    #6.times do
+      #Timeout::timeout(1.07) do
+        #while true
+          new = deep_copy_sudoku(best)
+          5.times do
+            if rand(2) == 1 || done?(new)
+            r, c = random_filled_cell(new)
+            new.grid.rows[r][c] = 0
+            else
+            r, c = random_empty_cell(new)
+            new.grid.rows[r][c] = solution.grid.rows[r][c]
+            end
 
-        one_sol = one_solution?(init_sudoku(new.grid.rows))
-        next if !one_sol
+            one_sol = one_solution?(init_sudoku(new.grid.rows))
+            next unless one_sol
 
-        new.bf = one_sol.bf
-        next if score(new) <= best_score
+            new.bf = one_sol.bf
+            next unless score(new) > best_score
 
-        best = deep_copy_sudoku(new)
-        best_score = score(best)
-      end
+            best = deep_copy_sudoku(new)
+            best_score = score(best)
+            throw :done if best_score >= try_goal
+          end
+        #end
+      #end rescue {}
+    #end
     end
   end
   {puzzle: best.grid.rows, solution: solution.grid.rows, score: best_score}
@@ -87,11 +94,11 @@ end
 
 def test
   score = []
-  500.times do
-    p Benchmark.measure {
-      r = gen(200)
-      score << r[:score]
-    }.total
+  300.times do
+    r = gen(200)
+    #puts "took #{r[:took]} for #{r[:score]}"
+    puts r[:took]
+    score << r[:score]
   end
   pp score.group_by { _1/100 }.transform_values { _1.size }.sort
 end
