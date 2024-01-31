@@ -1,4 +1,4 @@
-ARG RUBY_VERSION=3.2.2
+ARG RUBY_VERSION=3.3.0
 FROM ruby:$RUBY_VERSION-slim as base
 
 # Rack app lives here
@@ -37,5 +37,5 @@ COPY --chown=ruby:ruby . .
 
 # Start the server
 EXPOSE 8080
-ENV RUBYOPT="--mjit"
+ENV RUBYOPT="--yjit"
 CMD ["bundle", "exec", "rackup", "--host", "0.0.0.0", "--port", "8080"]

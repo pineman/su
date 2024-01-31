@@ -3,7 +3,6 @@ require 'json'
 
 require_relative 'gen'
 
-puts "mjit: #{RubyVM::MJIT.enabled?}"
 puts "yjit: #{RubyVM::YJIT.enabled?}"
 
 set :public_folder, 'html'
