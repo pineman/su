@@ -16,17 +16,24 @@ def init_sudoku(rows)
   }
   grid = Grid.new(rows, cols, boxes)
 
-  if (d = grid.rows.find_index { |r| r = r.filter { _1 != 0 }; r.uniq.size != r.size })
+  if (d = find_dup(grid.rows))
     raise "duplicate in row #{d+1}"
   end
-  if (d = grid.cols.find_index { |c| c = c.filter { _1 != 0 }; c.uniq.size != c.size })
+  if (d = find_dup(grid.cols))
     raise "duplicate in column #{d+1}"
   end
-  if (d = grid.boxes.find_index { |b| b = b.filter { _1 != 0 }; b.uniq.size != b.size })
+  if (d = find_dup(grid.boxes))
     raise "duplicate in box #{d+1}"
   end
 
   Sudoku.new(grid, 0, possible_positions(grid))
+end
+
+def find_dup(nums_arr)
+  nums_arr.find_index { |n|
+    n = n.filter { _1 != 0 }
+    n.uniq.size != n.size
+  }
 end
 
 def rc2box(r, c)
@@ -68,7 +75,7 @@ def move(s, m)
     next unless new.pos[i][m.col]
     new.pos[i][m.col] -= [m.num]
   }
-  rc4box(rc2box(m.row, m.col).first).each { |r, c|
+  rc4box(box).each { |r, c|
     next unless new.pos[r][c]
     new.pos[r][c] -= [m.num]
   }
