@@ -108,6 +108,7 @@ def solve_first(s)
     new = move(s, move)
     solved = solve_first(new)
     return solved if solved
+    # if the move is undone here, probably won't need to copy the whole sudoku
   end
   nil
 end

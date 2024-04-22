@@ -1,5 +1,5 @@
 # Sudoku
-sudoku solver in ruby
+weekend sudoku solver in ruby
 
 following this invaluable article https://dlbeer.co.nz/articles/sudoku.html
 
