@@ -49,38 +49,33 @@ def _gen(try_goal=9999999)
   # TODO: how long this takes is sorta bimodal. so terminate once a certain
   # time has been exceeded and try again, hoping to hit the fast mode, assuming
   # the slow mode takes long enough to justify this (seems like it)
+  # to timeout, check elapsed time sometimes and break
   solution = solve_first(init_sudoku(seed))
   best = deep_copy_sudoku(solution)
   best.bf = 0
   best_score = score(best)
   catch :done do
     200.times do
-    #6.times do
-      #Timeout::timeout(1.07) do
-        #while true
-          new = deep_copy_sudoku(best)
-          5.times do
-            if rand(2) == 1 || done?(new)
-            r, c = random_filled_cell(new)
-            new.grid.rows[r][c] = 0
-            else
-            r, c = random_empty_cell(new)
-            new.grid.rows[r][c] = solution.grid.rows[r][c]
-            end
+      new = deep_copy_sudoku(best)
+      5.times do
+        if rand(2) == 1 || done?(new)
+        r, c = random_filled_cell(new)
+        new.grid.rows[r][c] = 0
+        else
+        r, c = random_empty_cell(new)
+        new.grid.rows[r][c] = solution.grid.rows[r][c]
+        end
 
-            one_sol = one_solution?(init_sudoku(new.grid.rows))
-            next unless one_sol
+        one_sol = one_solution?(init_sudoku(new.grid.rows))
+        next unless one_sol
 
-            new.bf = one_sol.bf
-            next unless score(new) > best_score
+        new.bf = one_sol.bf
+        next unless score(new) > best_score
 
-            best = deep_copy_sudoku(new)
-            best_score = score(best)
-            throw :done if best_score >= try_goal
-          end
-        #end
-      #end rescue {}
-    #end
+        best = deep_copy_sudoku(new)
+        best_score = score(best)
+        throw :done if best_score >= try_goal
+      end
     end
   end
   {puzzle: best.grid.rows, solution: solution.grid.rows, score: best_score}
