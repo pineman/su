@@ -12,6 +12,9 @@ friendship ended with mjit
 now yjit is my best friend
 
 # TODO
+* optimize. do profile first, but that said:
+  - mutate instead of copy?
+  - with copies, is this embarssingly parallel on each move?
 * svelte frontend
 
 # IDEAS
