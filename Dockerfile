@@ -1,4 +1,4 @@
-FROM rubylang/ruby:master-jammy as base
+FROM rubylang/ruby:3.3.2-jammy as base
 ENV BUNDLE_APP_CONFIG=/usr/local/bundle \
     GEM_HOME=/usr/local/bundle \
     BUNDLE_SILENCE_ROOT_WARNING=1
