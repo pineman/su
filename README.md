@@ -21,3 +21,4 @@ now yjit is my best friend
 * rewrite it in javascript/something faster w/ wasm (rust :eyes:)
 * constraint solver? prolog??
 * would much rather a scheme or sbcl rewrite tho
+* https://news.ycombinator.com/item?id=41062072
