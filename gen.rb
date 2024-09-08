@@ -1,5 +1,4 @@
 require 'benchmark'
-require 'timeout'
 
 require_relative 'solver'
 
@@ -49,7 +48,6 @@ def _gen(try_goal=9999999)
   # TODO: how long this takes is sorta bimodal. so terminate once a certain
   # time has been exceeded and try again, hoping to hit the fast mode, assuming
   # the slow mode takes long enough to justify this (seems like it)
-  # to timeout, check elapsed time sometimes and break
   solution = solve_first(init_sudoku(seed))
   best = deep_copy_sudoku(solution)
   best.bf = 0
@@ -59,11 +57,11 @@ def _gen(try_goal=9999999)
       new = deep_copy_sudoku(best)
       5.times do
         if rand(2) == 1 || done?(new)
-        r, c = random_filled_cell(new)
-        new.grid.rows[r][c] = 0
+          r, c = random_filled_cell(new)
+          new.grid.rows[r][c] = 0
         else
-        r, c = random_empty_cell(new)
-        new.grid.rows[r][c] = solution.grid.rows[r][c]
+          r, c = random_empty_cell(new)
+          new.grid.rows[r][c] = solution.grid.rows[r][c]
         end
 
         one_sol = one_solution?(init_sudoku(new.grid.rows))
