@@ -3,8 +3,6 @@ require 'json'
 
 require_relative 'gen'
 
-puts "yjit: #{RubyVM::YJIT.enabled?}"
-
 set :public_folder, 'html'
 
 get '/' do

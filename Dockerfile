@@ -1,8 +1,7 @@
-FROM ruby:3.3.3-slim-bookworm as base
+FROM ghcr.io/graalvm/truffleruby-community:24.1.0-debian-20240917 AS base
 ENV BUNDLE_APP_CONFIG=/usr/local/bundle \
     GEM_HOME=/usr/local/bundle \
     BUNDLE_SILENCE_ROOT_WARNING=1
-
 
 # Rack app lives here
 WORKDIR /app
@@ -13,7 +12,7 @@ RUN gem update --system --no-document && \
 
 
 # Throw-away build stage to reduce size of final image
-FROM base as build
+FROM base AS build
 
 # Install packages needed to build gems
 RUN apt-get update -qq && \
@@ -40,5 +39,4 @@ COPY --chown=ruby:ruby . .
 
 # Start the server
 EXPOSE 8080
-ENV RUBYOPT="--yjit"
 CMD ["bundle", "exec", "rackup", "--host", "0.0.0.0", "--port", "8080"]

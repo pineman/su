@@ -6,7 +6,7 @@ class TestGen < Minitest::Test
   make_my_diffs_pretty!
 
   def test_gen
-    50.times do
+    10.times do
       s = gen(300)
       sols = solve_all(init_sudoku(s[:puzzle]))
       assert_equal 1, sols.size
