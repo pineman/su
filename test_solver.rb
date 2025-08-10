@@ -1,4 +1,5 @@
 require 'minitest/autorun'
+require 'benchmark'
 
 require_relative 'solver'
 
@@ -61,6 +62,44 @@ class TestSolver < Minitest::Test
       s = init_sudoku(hash[:puzzle])
       assert_equal hash[:solution], one_solution?(s).grid.rows
     }
+  end
+
+  def test_benchmark_all_puzzles
+    puts "\n=== Benchmark Results ==="
+
+    total_time = Benchmark.realtime do
+      puts "\nTrivial puzzles (#{@trivial.size} puzzles):"
+      @trivial.each_with_index do |hash, i|
+        time = Benchmark.realtime do
+          solve_first(init_sudoku(hash[:puzzle]))
+        end
+        puts "  Puzzle #{i+1}: #{(time * 1000).round(2)}ms (BF: #{hash[:branch_factor]})"
+      end
+
+      puts "\nBacktracking puzzles (#{@backtracking.size} puzzles):"
+      @backtracking.each_with_index do |hash, i|
+        time = Benchmark.realtime do
+          solve_first(init_sudoku(hash[:puzzle]))
+        end
+        puts "  Puzzle #{i+1}: #{(time * 1000).round(2)}ms (BF: #{hash[:branch_factor]})"
+      end
+
+      puts "\nMultiple solution puzzles (#{@number.size} puzzles):"
+      @number.each_with_index do |hash, i|
+        time = Benchmark.realtime do
+          solve_all(init_sudoku(hash[:puzzle]))
+        end
+        puts "  Puzzle #{i+1}: #{(time * 1000).round(2)}ms (#{hash[:solutions]} solutions)"
+      end
+    end
+
+    total_puzzles = @trivial.size + @backtracking.size + @number.size
+    puts "\nTotal time for #{total_puzzles} puzzles: #{(total_time * 1000).round(2)}ms"
+    puts "Average time per puzzle: #{(total_time * 1000 / total_puzzles).round(2)}ms"
+    puts "=========================="
+
+    # This test always passes - it's just for benchmarking
+    assert true
   end
 
   def setup

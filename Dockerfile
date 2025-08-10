@@ -1,4 +1,4 @@
-FROM ruby:3.3.3-slim-bookworm as base
+FROM ruby:3.4.5-slim-bookworm as base
 ENV BUNDLE_APP_CONFIG=/usr/local/bundle \
     GEM_HOME=/usr/local/bundle \
     BUNDLE_SILENCE_ROOT_WARNING=1
